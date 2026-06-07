@@ -1,0 +1,59 @@
+{
+  "name": "pi-second-brain",
+  "version": "0.1.0",
+  "description": "Personal knowledge management for the Pi coding agent. Capture fleeting thoughts, search your knowledge base, refactor inbox items using the PARA method, and sync via git.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "resources",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "pi",
+    "pi-package",
+    "pi-extension",
+    "pi-coding-agent",
+    "second-brain",
+    "para",
+    "knowledge-base",
+    "pkm"
+  ],
+  "pi": {
+    "extensions": ["./dist"],
+    "image": "https://raw.githubusercontent.com/andrea-tomassi/pi-second-brain/main/branding/banner.png"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsx src/index.ts",
+    "prepublishOnly": "npm run typecheck && npm run build"
+  },
+  "author": "Andrea Tomassi <andrea.tomassi@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andrea-tomassi/pi-second-brain.git"
+  },
+  "homepage": "https://github.com/andrea-tomassi/pi-second-brain#readme",
+  "bugs": {
+    "url": "https://github.com/andrea-tomassi/pi-second-brain/issues"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "^0.78.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.22.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
