@@ -35,7 +35,17 @@ export const sbSearchTool = {
   execute: async (_toolCallId: string, params: SbSearchParams, _signal: AbortSignal | undefined) => {
     const config = await loadConfig();
     const kbRoot = resolveKbPath(config);
-    const searchDir = params.directory ? path.join(kbRoot, DIR_MAP[params.directory] ?? params.directory) : kbRoot;
+    let searchDir = kbRoot;
+    if (params.directory && params.directory in DIR_MAP) {
+      searchDir = path.join(kbRoot, DIR_MAP[params.directory]);
+    }
+
+    // Safety check: ensure searchDir is within kbRoot
+    const normalizedKbRoot = path.resolve(kbRoot);
+    const normalizedSearchDir = path.resolve(searchDir);
+    if (!normalizedSearchDir.startsWith(normalizedKbRoot)) {
+      searchDir = normalizedKbRoot;
+    }
     const maxResults = params.maxResults ?? 20;
 
     return new Promise<{ content: { type: "text"; text: string }[]; details: { query: string; resultsCount: number; directory: string | undefined } }>(

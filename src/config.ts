@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -47,7 +47,7 @@ export async function saveConfig(config: SBConfig): Promise<void> {
 
   const tmpPath = configPath + ".tmp";
   await writeFile(tmpPath, JSON.stringify(config, null, 2), "utf-8");
-  await writeFile(configPath, JSON.stringify(config, null, 2), "utf-8");
+  await rename(tmpPath, configPath);
 }
 
 /**
