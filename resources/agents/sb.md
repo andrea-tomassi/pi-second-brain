@@ -192,36 +192,60 @@ go-easy auth list 2>/dev/null
 ```
 Use the first configured email as the calendar account.
 
-### Read events (QUERY)
-When the user asks about their schedule, upcoming events, or availability:
+### Discover calendars
 ```bash
-# Today's events
-go-calendar <email> events primary --from=$(date -u +%Y-%m-%dT00:00:00Z) --to=$(date -u +%Y-%m-%dT23:59:59Z)
+go-calendar <email> calendars
+```
+This returns all calendars with id, summary (display name), and primary flag.
 
-# This week
-go-calendar <email> events primary --from=$(date -u +%Y-%m-%dT00:00:00Z) --to=$(date -u -d "+7 days" +%Y-%m-%dT23:59:59Z)
+**Calendar selection strategy — read ALL calendars, then filter by semantic context:**
 
-# Free/busy check
-go-calendar <email> freebusy primary --from=... --to=...
+1. Fetch calendars list.
+2. Based on the user's query, select which calendars to query:
+   - **"cosa ho domani?" / "my schedule" / general queries** → query ALL calendars, merge results, present unified view
+   - **"work meetings" / "lavoro"** → prefer calendars with work-related names (e.g., `sharelock`, company domain)
+   - **"birthdays" / "compleanni"** → query birthday calendar explicitly
+   - **"with Barbara" / "personale"** → query shared/family calendars
+3. Use `--event-types=default,outOfOffice,focusTime` to exclude birthdays from general queries (unless user asks for birthdays).
+
+### Read events (QUERY)
+Query each relevant calendar and merge results:
+```bash
+# Discover calendars first
+go-calendar <email> calendars
+
+# Query a specific calendar (excluding birthdays by default)
+go-calendar <email> events <calendarId> --from=$(date -u +%Y-%m-%dT00:00:00Z) --to=$(date -u -d "+7 days" +%Y-%m-%dT23:59:59Z) --event-types=default,outOfOffice,focusTime
+
+# Free/busy across multiple calendars
+go-calendar <email> freebusy <calId1>,<calId2> --from=... --to=...
 ```
 
-### Create events (REFACTor)
+When presenting results, show which calendar each event comes from if multiple calendars are involved.
+
+### Create events (REFACTOR)
 During refactor, if an inbox entry contains a **specific date and time** (not vague like "sometime"), offer to create a calendar event:
 ```bash
-go-calendar <email> create primary --summary="..." --start="YYYY-MM-DDTHH:MM:SS" --end="YYYY-MM-DDTHH:MM:SS" --confirm
+# Create on the primary calendar by default
+# If the entry is work-related, use the work calendar instead
+go-calendar <email> create <calendarId> --summary="..." --start="YYYY-MM-DDTHH:MM:SS" --end="YYYY-MM-DDTHH:MM:SS" --confirm
 ```
 
+Choose the target calendar based on the event's semantic context (work → work calendar, personal → primary).
+
 ### Calendar rules
-- **READ** operations (list events, free/busy): use freely.
+- **READ** operations (list events, free/busy): use freely across all calendars.
 - **CREATE** events: only during refactor or when explicitly asked. Always confirm with user first.
 - **DELETE** events: only with explicit user confirmation. Never delete during refactor.
 - When showing events to the user, present a clean summary: date, time, summary, location.
-- Ignore all-day birthday events unless the user specifically asks about birthdays.
+- Use `--event-types=default,outOfOffice,focusTime` by default to exclude birthday spam.
+- Only show birthday events when user explicitly asks about birthdays/compleanni.
 - Merge calendar info with SB data when answering queries (e.g., "what do I have this week?" → SB notes + calendar events).
+- When multiple calendars have events, show a unified timeline sorted by time.
 
 ### STATUS integration
 Include calendar info in the status report:
-- Today's upcoming events count
+- Today's upcoming events count (across all calendars)
 - Next event summary
 
 ---
