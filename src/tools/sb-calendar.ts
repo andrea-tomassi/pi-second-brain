@@ -85,6 +85,7 @@ export const sbCalendarTool = {
       end: string;
       location?: string;
       calendar: string;
+      allDay: boolean;
     }> = [];
 
     for (const cal of calendars) {
@@ -97,12 +98,17 @@ export const sbCalendarTool = {
         const events = JSON.parse(eventsJson);
         const items = events.items || events || [];
         for (const ev of items) {
+          // Handle both string and object start/end formats
+          const startVal = typeof ev.start === "string" ? ev.start : (ev.start?.dateTime || ev.start?.date || "?");
+          const endVal = typeof ev.end === "string" ? ev.end : (ev.end?.dateTime || ev.end?.date || "");
+          const isAllDay = startVal.length === 10; // YYYY-MM-DD without time
           allEvents.push({
             summary: ev.summary || "(no title)",
-            start: ev.start?.dateTime || ev.start?.date || "?",
-            end: ev.end?.dateTime || ev.end?.date || "",
+            start: startVal,
+            end: endVal,
             location: ev.location || "",
             calendar: cal.summary,
+            allDay: isAllDay,
           });
         }
       } catch {
@@ -120,6 +126,9 @@ export const sbCalendarTool = {
       };
     }
 
+    // Day names for header
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
     // Format output
     let output = `📅 Events (${from} → ${to}):\n\n`;
     let currentDate = "";
@@ -128,14 +137,23 @@ export const sbCalendarTool = {
       const date = ev.start.slice(0, 10);
       if (date !== currentDate) {
         currentDate = date;
-        output += `## ${date}\n`;
+        try {
+          const d = new Date(date + "T12:00:00");
+          const dayName = dayNames[d.getDay()];
+          output += `## ${date} (${dayName})\n`;
+        } catch {
+          output += `## ${date}\n`;
+        }
       }
 
-      const time = ev.start.length > 10 ? ev.start.slice(11, 16) : "all-day";
-      const endTime = ev.end.length > 10 ? ev.end.slice(11, 16) : "";
-      const timeRange = endTime ? `${time}-${endTime}` : time;
-
-      output += `- **${timeRange}** ${ev.summary}`;
+      if (ev.allDay) {
+        output += `- 📌 **all-day** ${ev.summary}`;
+      } else {
+        const time = ev.start.length > 10 ? ev.start.slice(11, 16) : "??:??";
+        const endTime = ev.end.length > 10 ? ev.end.slice(11, 16) : "";
+        const timeRange = endTime ? `${time}–${endTime}` : time;
+        output += `- **${timeRange}** ${ev.summary}`;
+      }
       if (ev.location) {
         output += ` 📍 ${ev.location}`;
       }
