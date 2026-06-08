@@ -70,6 +70,7 @@ export const sbCalendarTool = {
 
     // 4. Query each calendar and collect raw events
     const { from, to, query } = params;
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const allEvents: unknown[] = [];
 
     for (const cal of calendars) {
@@ -84,10 +85,18 @@ export const sbCalendarTool = {
         // Tag each event with its calendar name, strip fat
         for (const ev of items) {
           const e = ev as Record<string, unknown>;
+          // Add day-of-week from start date
+          const startStr = typeof e.start === "string" ? e.start : ((e.start as Record<string,string>)?.dateTime || (e.start as Record<string,string>)?.date || "");
+          let dayOfWeek: string | undefined;
+          try {
+            const d = new Date(startStr.slice(0, 10) + "T12:00:00");
+            dayOfWeek = dayNames[d.getDay()];
+          } catch { /* skip */ }
           allEvents.push({
             summary: e.summary,
             start: e.start,
             end: e.end,
+            dayOfWeek,
             location: e.location || undefined,
             attendees: (e.attendees as Array<Record<string, string>>)?.map(a => a.displayName || a.email),
             description: typeof e.description === "string" ? e.description.slice(0, 300) : undefined,
