@@ -86,6 +86,8 @@ export const sbCalendarTool = {
       location?: string;
       calendar: string;
       allDay: boolean;
+      attendees?: string[];
+      description?: string;
     }> = [];
 
     for (const cal of calendars) {
@@ -102,6 +104,17 @@ export const sbCalendarTool = {
           const startVal = typeof ev.start === "string" ? ev.start : (ev.start?.dateTime || ev.start?.date || "?");
           const endVal = typeof ev.end === "string" ? ev.end : (ev.end?.dateTime || ev.end?.date || "");
           const isAllDay = startVal.length === 10; // YYYY-MM-DD without time
+          // Extract attendee emails/names
+          const attendees: string[] = [];
+          if (Array.isArray(ev.attendees)) {
+            for (const att of ev.attendees) {
+              if (att.email && att.email !== account) {
+                attendees.push(att.displayName ? `${att.displayName} (${att.email})` : att.email);
+              } else if (att.displayName && att.email === account) {
+                attendees.push(`${att.displayName} (you)`);
+              }
+            }
+          }
           allEvents.push({
             summary: ev.summary || "(no title)",
             start: startVal,
@@ -109,6 +122,8 @@ export const sbCalendarTool = {
             location: ev.location || "",
             calendar: cal.summary,
             allDay: isAllDay,
+            attendees,
+            description: ev.description || "",
           });
         }
       } catch {
@@ -161,6 +176,9 @@ export const sbCalendarTool = {
         output += ` [${ev.calendar}]`;
       }
       output += "\n";
+      if (ev.attendees && ev.attendees.length > 0) {
+        output += `  👥 ${ev.attendees.join(", ")}\n`;
+      }
     }
 
     return {
