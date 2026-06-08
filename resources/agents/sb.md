@@ -234,17 +234,11 @@ go-calendar <email> create <calendarId> --summary="..." --start="YYYY-MM-DDTHH:M
 Choose the target calendar based on the event's semantic context (work → work calendar, personal → primary).
 
 ### Calendar access levels
-Calendars have different access levels. Test write access on first create attempt:
-```bash
-# Try creating on the semantically appropriate calendar first
-# If you get "writer access" error, fall back to the primary calendar
-```
-Known access pattern (may vary — always handle errors gracefully):
-- `andrea.tomassi@gmail.com` (primary) → **read + write**
-- `andrea.tomassi@sharelock.ai` (work) → **read-only** (invited as attendee, not owner)
-- Shared calendars (e.g., "Barbara & Andrea") → **read + write** (usually)
+You don't know which calendars are writable in advance. Discover them dynamically:
 
-If a create/update/delete fails with access error, fall back to the primary calendar and notify the user.
+1. Fetch calendars list: `go-calendar <email> calendars`
+2. For reads: query all calendars.
+3. For writes (create/update/delete): try the semantically appropriate calendar first. If you get a `"writer access"` error, fall back to the **primary** calendar (the one with `"primary": true`) and notify the user.
 
 ### Calendar rules
 - **READ** operations (list events, free/busy): use freely across all calendars.
