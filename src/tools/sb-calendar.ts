@@ -48,14 +48,16 @@ export const sbCalendarTool = {
     // 2. Detect account
     let account: string;
     try {
-      const authList = execSync("go-easy auth list 2>/dev/null", { encoding: "utf-8" }).trim();
-      if (!authList) {
+      const authJson = execSync("go-easy auth list 2>/dev/null", { encoding: "utf-8" }).trim();
+      const authData = JSON.parse(authJson);
+      const accounts: Array<{ email: string }> = authData.accounts || [];
+      if (accounts.length === 0) {
         return {
           content: [{ type: "text", text: "No Google account configured. Run: go-easy auth add your@email.com" }],
           details: {},
         };
       }
-      account = authList.split("\n")[0].trim();
+      account = accounts[0].email;
     } catch {
       return {
         content: [{ type: "text", text: "Failed to detect Google account." }],
