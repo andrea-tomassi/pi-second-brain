@@ -36,10 +36,16 @@ export default function (pi: ExtensionAPI): void {
 
       let operation: "refactor" | "query" | "sync" | "status";
       let task: string;
+      let dryRun: boolean | undefined;
 
       if (lower === "" || lower === "refactor") {
         operation = "refactor";
         task = "Refactor all inbox entries into the appropriate PARA categories.";
+        dryRun = false;
+      } else if (lower.startsWith("refactor ")) {
+        operation = "refactor";
+        task = lower.slice("refactor ".length);
+        dryRun = lower.includes("--dry-run");
       } else if (lower === "sync") {
         operation = "sync";
         task = "Commit and push all changes in the Second Brain repository.";
@@ -55,7 +61,7 @@ export default function (pi: ExtensionAPI): void {
       ctx.ui.notify(`⏳ Second Brain: ${operation}...`, "info");
 
       try {
-        const result = await spawnSbAgent(task, { operation }, undefined);
+        const result = await spawnSbAgent(task, { operation, dryRun }, undefined);
 
         if (result.success) {
           ctx.ui.notify(`✓ Second Brain ${operation} complete`, "info");
