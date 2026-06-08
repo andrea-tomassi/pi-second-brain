@@ -233,15 +233,30 @@ go-calendar <email> create <calendarId> --summary="..." --start="YYYY-MM-DDTHH:M
 
 Choose the target calendar based on the event's semantic context (work → work calendar, personal → primary).
 
+### Calendar access levels
+Calendars have different access levels. Test write access on first create attempt:
+```bash
+# Try creating on the semantically appropriate calendar first
+# If you get "writer access" error, fall back to the primary calendar
+```
+Known access pattern (may vary — always handle errors gracefully):
+- `andrea.tomassi@gmail.com` (primary) → **read + write**
+- `andrea.tomassi@sharelock.ai` (work) → **read-only** (invited as attendee, not owner)
+- Shared calendars (e.g., "Barbara & Andrea") → **read + write** (usually)
+
+If a create/update/delete fails with access error, fall back to the primary calendar and notify the user.
+
 ### Calendar rules
 - **READ** operations (list events, free/busy): use freely across all calendars.
 - **CREATE** events: only during refactor or when explicitly asked. Always confirm with user first.
+- **UPDATE** events: only with explicit user confirmation. Check that the event still exists before updating.
 - **DELETE** events: only with explicit user confirmation. Never delete during refactor.
 - When showing events to the user, present a clean summary: date, time, summary, location.
 - Use `--event-types=default,outOfOffice,focusTime` by default to exclude birthday spam.
 - Only show birthday events when user explicitly asks about birthdays/compleanni.
 - Merge calendar info with SB data when answering queries (e.g., "what do I have this week?" → SB notes + calendar events).
 - When multiple calendars have events, show a unified timeline sorted by time.
+- When creating an event, try the semantically correct calendar first. On access error, fall back to primary and tell the user.
 
 ### STATUS integration
 Include calendar info in the status report:
