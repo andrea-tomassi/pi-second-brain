@@ -178,22 +178,28 @@ Last sync: 2026-06-07 18:30:45 +0200
 
 ## 5. CALENDAR — Google Calendar Integration
 
-When `go-calendar` is available on PATH, integrate with Google Calendar.
+You have access to Google Calendar via the **`go-calendar` CLI tool**.
+**IMPORTANT: You do NOT have a calendar-specific tool. Invoke ALL calendar commands using your `bash` tool.**
+
+Example: to list calendars, call `bash` with the command: `go-calendar <email> calendars`
 
 ### Detect availability
-```bash
+Use `bash`:
+```
 which go-calendar 2>/dev/null
 ```
 If not found, skip all calendar operations and note it in status.
 
 ### Detect account
-```bash
+Use `bash`:
+```
 go-easy auth list 2>/dev/null
 ```
 Use the first configured email as the calendar account.
 
 ### Discover calendars
-```bash
+Use `bash`:
+```
 go-calendar <email> calendars
 ```
 This returns all calendars with id, summary (display name), and primary flag.
@@ -202,15 +208,15 @@ This returns all calendars with id, summary (display name), and primary flag.
 
 1. Fetch calendars list.
 2. Based on the user's query, select which calendars to query:
-   - **"cosa ho domani?" / "my schedule" / general queries** → query ALL calendars, merge results, present unified view
-   - **"work meetings" / "lavoro"** → prefer calendars with work-related names (e.g., company domain)
-   - **"birthdays" / "compleanni"** → query birthday calendar explicitly
-   - **"with Barbara" / "personale"** → query shared/family calendars
+   - General schedule queries → query ALL calendars, merge results, present unified view
+   - Work-related keywords → prefer calendars with work-related names
+   - Birthday keywords → query birthday calendar explicitly
+   - Personal/family keywords → query shared/family calendars
 3. Use `--event-types=default,outOfOffice,focusTime` to exclude birthdays from general queries (unless user asks for birthdays).
 
 ### Read events (QUERY)
-Query each relevant calendar and merge results:
-```bash
+Use `bash` to query each relevant calendar and merge results:
+```
 # Discover calendars first
 go-calendar <email> calendars
 
@@ -224,14 +230,21 @@ go-calendar <email> freebusy <calId1>,<calId2> --from=... --to=...
 When presenting results, show which calendar each event comes from if multiple calendars are involved.
 
 ### Create events (REFACTOR)
-During refactor, if an inbox entry contains a **specific date and time** (not vague like "sometime"), offer to create a calendar event:
-```bash
-# Create on the primary calendar by default
-# If the entry is work-related, use the work calendar instead
+During refactor, if an inbox entry contains a **specific date and time** (not vague like "sometime"), offer to create a calendar event using `bash`:
+```
 go-calendar <email> create <calendarId> --summary="..." --start="YYYY-MM-DDTHH:MM:SS" --end="YYYY-MM-DDTHH:MM:SS" --confirm
 ```
-
 Choose the target calendar based on the event's semantic context (work → work calendar, personal → primary).
+
+### Update / Delete events
+Use `bash`:
+```
+# Update
+go-calendar <email> update <calendarId> <eventId> --summary="..." --start=... --end=...
+
+# Delete
+go-calendar <email> delete <calendarId> <eventId> --confirm
+```
 
 ### Calendar access levels
 You don't know which calendars are writable in advance. Discover them dynamically:
@@ -247,7 +260,7 @@ You don't know which calendars are writable in advance. Discover them dynamicall
 - **DELETE** events: only with explicit user confirmation. Never delete during refactor.
 - When showing events to the user, present a clean summary: date, time, summary, location.
 - Use `--event-types=default,outOfOffice,focusTime` by default to exclude birthday spam.
-- Only show birthday events when user explicitly asks about birthdays/compleanni.
+- Only show birthday events when user explicitly asks about birthdays.
 - Merge calendar info with SB data when answering queries (e.g., "what do I have this week?" → SB notes + calendar events).
 - When multiple calendars have events, show a unified timeline sorted by time.
 - When creating an event, try the semantically correct calendar first. On access error, fall back to primary and tell the user.
