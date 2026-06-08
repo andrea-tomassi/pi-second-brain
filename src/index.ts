@@ -103,4 +103,20 @@ export default function (pi: ExtensionAPI): void {
     const skillsPath = join(here, "..", "resources", "skills");
     return { skillPaths: [skillsPath] };
   });
+
+  // 5. Debug: log active tools and skills on first agent turn
+  pi.on("before_agent_start", (event) => {
+    const opts = event.systemPromptOptions;
+    if (opts?.selectedTools) {
+      console.error(`[SB] tools: ${opts.selectedTools.join(", ")}`);
+      console.error(`[SB] sb_capture: ${opts.selectedTools.includes("sb_capture")}`);
+      console.error(`[SB] sb_search: ${opts.selectedTools.includes("sb_search")}`);
+    }
+    if (opts?.skills) {
+      console.error(`[SB] skills: ${opts.skills.length}`);
+      for (const s of opts.skills) {
+        console.error(`[SB]   skill: ${s.name} (${s.filePath})`);
+      }
+    }
+  });
 }

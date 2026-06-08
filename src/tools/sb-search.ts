@@ -24,7 +24,7 @@ export const sbSearchTool = {
   name: "sb_search",
   label: "Search knowledge base",
   description:
-    "Search your Second Brain knowledge base for notes, tasks, or ideas matching a query. Returns matching file paths and line excerpts. Use this when the user asks about personal projects, tasks, or past captures.",
+    "Search your Second Brain knowledge base for notes, tasks, or ideas matching a query. Returns matching file paths and line excerpts. Use this when the user asks about personal projects, tasks, or past captures. IMPORTANT: This tool only searches local notes — it does NOT check Google Calendar. For schedule, events, or appointments, use the /sb command instead.",
   parameters: Type.Object({
     query: Type.String({ description: "Search query — specific terms work best." }),
     directory: Type.Optional(
