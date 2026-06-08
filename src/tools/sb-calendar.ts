@@ -2,24 +2,20 @@ import { Type } from "typebox";
 import type { AgentToolResult, AgentToolUpdateCallback, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { execSync } from "node:child_process";
 
-/**
- * Fast-path calendar tool that queries Google Calendar via go-calendar CLI.
- * Returns structured event data without spawning a subagent.
- */
 export const sbCalendarTool = {
   name: "sb_calendar",
   label: "Check Google Calendar",
   description:
     "Check Google Calendar for upcoming events, schedule, or availability. " +
     "Use when the user asks about their schedule, appointments, meetings, or what they have today/this week. " +
-    "Returns events from ALL calendars (work, personal, shared) merged into a unified timeline. " +
+    "Returns raw event data from ALL calendars. " +
     "Supports queries like 'cosa ho domani?', 'my schedule this week', 'am I free Thursday?'.",
   parameters: Type.Object({
     from: Type.String({
-      description: "Start date in YYYY-MM-DD format (default: today)",
+      description: "Start date in YYYY-MM-DD format",
     }),
     to: Type.String({
-      description: "End date in YYYY-MM-DD format (default: 7 days from start)",
+      description: "End date in YYYY-MM-DD format",
     }),
     query: Type.Optional(Type.String({
       description: "Optional text to search for in event titles",
@@ -37,10 +33,7 @@ export const sbCalendarTool = {
       execSync("which go-calendar", { encoding: "utf-8" });
     } catch {
       return {
-        content: [{
-          type: "text",
-          text: "Google Calendar integration is not available. Install go-calendar (`npm install -g @marcfargas/go-easy`) and configure credentials.",
-        }],
+        content: [{ type: "text", text: "Google Calendar not available. Install: npm i -g @marcfargas/go-easy" }],
         details: {},
       };
     }
@@ -48,8 +41,7 @@ export const sbCalendarTool = {
     // 2. Detect account
     let account: string;
     try {
-      const authJson = execSync("go-easy auth list 2>/dev/null", { encoding: "utf-8" }).trim();
-      const authData = JSON.parse(authJson);
+      const authData = JSON.parse(execSync("go-easy auth list 2>/dev/null", { encoding: "utf-8" }));
       const accounts: Array<{ email: string }> = authData.accounts || [];
       if (accounts.length === 0) {
         return {
@@ -66,10 +58,9 @@ export const sbCalendarTool = {
     }
 
     // 3. Discover calendars
-    let calendars: Array<{ id: string; summary: string; primary?: boolean }>;
+    let calendars: Array<{ id: string; summary: string }>;
     try {
-      const calJson = execSync(`go-calendar ${account} calendars`, { encoding: "utf-8" });
-      calendars = JSON.parse(calJson);
+      calendars = JSON.parse(execSync(`go-calendar ${account} calendars`, { encoding: "utf-8" }));
     } catch {
       return {
         content: [{ type: "text", text: "Failed to discover calendars." }],
@@ -77,18 +68,9 @@ export const sbCalendarTool = {
       };
     }
 
-    // 4. Query each calendar and merge events
+    // 4. Query each calendar and collect raw events
     const { from, to, query } = params;
-    const allEvents: Array<{
-      summary: string;
-      start: string;
-      end: string;
-      location?: string;
-      calendar: string;
-      allDay: boolean;
-      attendees?: string[];
-      description?: string;
-    }> = [];
+    const allEvents: unknown[] = [];
 
     for (const cal of calendars) {
       try {
@@ -96,43 +78,26 @@ export const sbCalendarTool = {
         if (query) {
           cmd += ` --query="${query.replace(/"/g, '\\"')}"`;
         }
-        const eventsJson = execSync(cmd, { encoding: "utf-8", timeout: 10_000 });
-        const events = JSON.parse(eventsJson);
-        const items = events.items || events || [];
+        const raw = execSync(cmd, { encoding: "utf-8", timeout: 10_000 });
+        const parsed = JSON.parse(raw);
+        const items: unknown[] = parsed.items || parsed || [];
+        // Tag each event with its calendar name, strip fat
         for (const ev of items) {
-          // Handle both string and object start/end formats
-          const startVal = typeof ev.start === "string" ? ev.start : (ev.start?.dateTime || ev.start?.date || "?");
-          const endVal = typeof ev.end === "string" ? ev.end : (ev.end?.dateTime || ev.end?.date || "");
-          const isAllDay = startVal.length === 10; // YYYY-MM-DD without time
-          // Extract attendee emails/names
-          const attendees: string[] = [];
-          if (Array.isArray(ev.attendees)) {
-            for (const att of ev.attendees) {
-              if (att.email && att.email !== account) {
-                attendees.push(att.displayName ? `${att.displayName} (${att.email})` : att.email);
-              } else if (att.displayName && att.email === account) {
-                attendees.push(`${att.displayName} (you)`);
-              }
-            }
-          }
+          const e = ev as Record<string, unknown>;
           allEvents.push({
-            summary: ev.summary || "(no title)",
-            start: startVal,
-            end: endVal,
-            location: ev.location || "",
+            summary: e.summary,
+            start: e.start,
+            end: e.end,
+            location: e.location || undefined,
+            attendees: (e.attendees as Array<Record<string, string>>)?.map(a => a.displayName || a.email),
+            description: typeof e.description === "string" ? e.description.slice(0, 300) : undefined,
             calendar: cal.summary,
-            allDay: isAllDay,
-            attendees,
-            description: ev.description || "",
           });
         }
       } catch {
-        // Skip calendars we can't read
+        // skip unreadable calendars
       }
     }
-
-    // 5. Sort by start time and format
-    allEvents.sort((a, b) => a.start.localeCompare(b.start));
 
     if (allEvents.length === 0) {
       return {
@@ -141,48 +106,9 @@ export const sbCalendarTool = {
       };
     }
 
-    // Day names for header
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-    // Format output
-    let output = `📅 Events (${from} → ${to}):\n\n`;
-    let currentDate = "";
-    for (const ev of allEvents) {
-      // Extract date for grouping
-      const date = ev.start.slice(0, 10);
-      if (date !== currentDate) {
-        currentDate = date;
-        try {
-          const d = new Date(date + "T12:00:00");
-          const dayName = dayNames[d.getDay()];
-          output += `## ${date} (${dayName})\n`;
-        } catch {
-          output += `## ${date}\n`;
-        }
-      }
-
-      if (ev.allDay) {
-        output += `- 📌 **all-day** ${ev.summary}`;
-      } else {
-        const time = ev.start.length > 10 ? ev.start.slice(11, 16) : "??:??";
-        const endTime = ev.end.length > 10 ? ev.end.slice(11, 16) : "";
-        const timeRange = endTime ? `${time}–${endTime}` : time;
-        output += `- **${timeRange}** ${ev.summary}`;
-      }
-      if (ev.location) {
-        output += ` 📍 ${ev.location}`;
-      }
-      if (calendars.length > 1) {
-        output += ` [${ev.calendar}]`;
-      }
-      output += "\n";
-      if (ev.attendees && ev.attendees.length > 0) {
-        output += `  👥 ${ev.attendees.join(", ")}\n`;
-      }
-    }
-
+    // 5. Dump as JSON — the LLM handles the rest
     return {
-      content: [{ type: "text", text: output }],
+      content: [{ type: "text", text: JSON.stringify(allEvents, null, 2) }],
       details: { eventCount: allEvents.length, calendarCount: calendars.length },
     };
   },
