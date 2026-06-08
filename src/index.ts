@@ -64,11 +64,8 @@ export default function (pi: ExtensionAPI): void {
         const result = await spawnSbAgent(task, { operation, dryRun }, undefined);
 
         if (result.success) {
-          ctx.ui.notify(`✓ Second Brain ${operation} complete`, "info");
-          // For status, show the output as a notification
-          if (operation === "status") {
-            ctx.ui.notify(result.output, "info");
-          }
+          const summary = result.output || "done";
+          ctx.ui.notify(`✓ Second Brain ${operation}: ${summary.slice(0, 500)}`, "info");
         } else {
           ctx.ui.notify(`✗ Second Brain ${operation} failed: ${result.error}`, "error");
         }
