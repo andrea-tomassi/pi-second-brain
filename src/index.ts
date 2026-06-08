@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { sbCaptureTool } from "./tools/sb-capture.js";
 import { sbSearchTool } from "./tools/sb-search.js";
+import { sbCalendarTool } from "./tools/sb-calendar.js";
 import { spawnSbAgent } from "./agent-runner.js";
 
 /**
@@ -18,6 +19,7 @@ export default function (pi: ExtensionAPI): void {
   // 1. Register tools
   pi.registerTool(sbCaptureTool);
   pi.registerTool(sbSearchTool);
+  pi.registerTool(sbCalendarTool);
 
   // 2. Register /sb command
   pi.registerCommand("sb", {
