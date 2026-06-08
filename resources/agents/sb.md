@@ -203,7 +203,7 @@ This returns all calendars with id, summary (display name), and primary flag.
 1. Fetch calendars list.
 2. Based on the user's query, select which calendars to query:
    - **"cosa ho domani?" / "my schedule" / general queries** → query ALL calendars, merge results, present unified view
-   - **"work meetings" / "lavoro"** → prefer calendars with work-related names (e.g., `sharelock`, company domain)
+   - **"work meetings" / "lavoro"** → prefer calendars with work-related names (e.g., company domain)
    - **"birthdays" / "compleanni"** → query birthday calendar explicitly
    - **"with Barbara" / "personale"** → query shared/family calendars
 3. Use `--event-types=default,outOfOffice,focusTime` to exclude birthdays from general queries (unless user asks for birthdays).
