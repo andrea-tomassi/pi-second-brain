@@ -72,6 +72,21 @@ When using `/sb <query>`, present a synthesized answer rather than a raw list of
 | **Resources** | Reference material, topics of interest | "Kubernetes guides", "Meditation apps" |
 | **Archive** | Completed or inactive items | Finished projects, stalled areas |
 
+## Calendar integration
+
+When the user asks about their **schedule, upcoming events, availability**, or combines time-based questions with SB queries, the `/sb` subagent can check Google Calendar via `go-calendar`.
+
+**Examples of calendar-aware queries:**
+- "cosa ho domani?" → `/sb what do I have tomorrow?`
+- "am I free Thursday afternoon?" → `/sb check my availability Thursday afternoon`
+- "what does my week look like?" → `/sb summarize my week`
+
+The subagent merges calendar data with SB notes to give a complete answer.
+
+**You do NOT call calendar tools directly** — the `/sb` subagent handles it. Just route calendar-related questions through `/sb <query>`.
+
+---
+
 ## When NOT to use these tools
 
 - **Don't search** for every question — only when prior knowledge is relevant.

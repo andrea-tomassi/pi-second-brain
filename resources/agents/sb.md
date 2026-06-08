@@ -176,6 +176,56 @@ Last sync: 2026-06-07 18:30:45 +0200
 
 ---
 
+## 5. CALENDAR — Google Calendar Integration
+
+When `go-calendar` is available on PATH, integrate with Google Calendar.
+
+### Detect availability
+```bash
+which go-calendar 2>/dev/null
+```
+If not found, skip all calendar operations and note it in status.
+
+### Detect account
+```bash
+go-easy auth list 2>/dev/null
+```
+Use the first configured email as the calendar account.
+
+### Read events (QUERY)
+When the user asks about their schedule, upcoming events, or availability:
+```bash
+# Today's events
+go-calendar <email> events primary --from=$(date -u +%Y-%m-%dT00:00:00Z) --to=$(date -u +%Y-%m-%dT23:59:59Z)
+
+# This week
+go-calendar <email> events primary --from=$(date -u +%Y-%m-%dT00:00:00Z) --to=$(date -u -d "+7 days" +%Y-%m-%dT23:59:59Z)
+
+# Free/busy check
+go-calendar <email> freebusy primary --from=... --to=...
+```
+
+### Create events (REFACTor)
+During refactor, if an inbox entry contains a **specific date and time** (not vague like "sometime"), offer to create a calendar event:
+```bash
+go-calendar <email> create primary --summary="..." --start="YYYY-MM-DDTHH:MM:SS" --end="YYYY-MM-DDTHH:MM:SS" --confirm
+```
+
+### Calendar rules
+- **READ** operations (list events, free/busy): use freely.
+- **CREATE** events: only during refactor or when explicitly asked. Always confirm with user first.
+- **DELETE** events: only with explicit user confirmation. Never delete during refactor.
+- When showing events to the user, present a clean summary: date, time, summary, location.
+- Ignore all-day birthday events unless the user specifically asks about birthdays.
+- Merge calendar info with SB data when answering queries (e.g., "what do I have this week?" → SB notes + calendar events).
+
+### STATUS integration
+Include calendar info in the status report:
+- Today's upcoming events count
+- Next event summary
+
+---
+
 ## Safety Rules
 
 - **Never delete files** without explicit user confirmation.
