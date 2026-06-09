@@ -87,6 +87,21 @@ The subagent merges calendar data with SB notes to give a complete answer.
 
 ---
 
+## 🚫 Write Protection — PARA directories are READ-ONLY
+
+The PARA directories (`01-Projects/`, `02-Areas/`, `03-Resources/`, `99-Archive/`) are **strictly read-only** for the agent.
+
+**The ONLY allowed write path is `sb_capture` → `00-Inbox/`.**
+
+- **NEVER** use `write`, `edit`, or any direct file tool to create or modify files inside PARA directories.
+- **NEVER** bypass `sb_capture` to write directly into Projects, Areas, Resources, or Archive.
+- Categorization from inbox into PARA happens **exclusively** via `/sb refactor`.
+- If you need to update a project note, capture the update to inbox — the refactor step will merge it.
+
+**Violation of this rule is a critical error**, even if the intent is correct. The workflow exists to preserve consistency, auditability, and the refactor-driven categorization model.
+
+---
+
 ## When NOT to use these tools
 
 - **Don't search** for every question — only when prior knowledge is relevant.
