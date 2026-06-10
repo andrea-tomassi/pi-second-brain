@@ -132,38 +132,50 @@ export default function (pi: ExtensionAPI): void {
     ctx.ui.notify(summaryLines.join("\n"), "info");
   }
 
-  // 3. Register /sb command
-  pi.registerCommand("sb", {
-    description: "Second Brain operations: refactor, list, status, or query your knowledge base",
-    getArgumentCompletions: async (argumentPrefix: string) => {
-      const prefix = argumentPrefix.trimStart();
-
-      // /sb list <folder> — offer folder options
-      if (prefix === "list " || prefix === "list") {
-        return PARA_FOLDERS.map((f) => ({
-          value: `list ${f.key}`,
-          label: `${f.icon} ${f.key}`,
-          description: `${f.label} (${f.dir}/)`,
-        }));
+  // 3. Helper: count entries in all .md files under a folder
+  function countFolderEntries(folderPath: string): number {
+    try {
+      const files = readdirSync(folderPath).filter((f) => f.endsWith(".md"));
+      let count = 0;
+      for (const file of files) {
+        count += countEntries(join(folderPath, file));
       }
+      return count;
+    } catch {
+      return 0;
+    }
+  }
 
-      // Top-level completions
-      return [
-        { value: "refactor", label: "refactor", description: "Refactor inbox entries into PARA categories" },
-        { value: "list", label: "list", description: "List folders with counts, or list contents of a specific folder" },
-        { value: "status", label: "status", description: "Report the current status of the knowledge base" },
-      ];
+  // 4. Register /sb-list command
+  pi.registerCommand("sb-list", {
+    description: "List Second Brain folder contents",
+    getArgumentCompletions: async () => {
+      const config = await loadConfig();
+      const kbRoot = resolveKbPath(config);
+      return PARA_FOLDERS.map((f) => {
+        const count = countFolderEntries(join(kbRoot, f.dir));
+        return {
+          value: f.key,
+          label: `${f.icon} ${f.key} (${count})`,
+          description: `${f.label} (${f.dir}/)`,
+        };
+      });
     },
+    handler: async (args, ctx) => {
+      await handleList((args ?? "").trim(), ctx);
+    },
+  });
+
+  // 5. Register /sb command
+  pi.registerCommand("sb", {
+    description: "Second Brain operations: refactor, status, or query your knowledge base",
+    getArgumentCompletions: async () => [
+      { value: "refactor", label: "refactor", description: "Refactor inbox entries into PARA categories" },
+      { value: "status", label: "status", description: "Report the current status of the knowledge base" },
+    ],
     handler: async (args, ctx) => {
       const trimmed = (args ?? "").trim();
       const lower = trimmed.toLowerCase();
-
-      // Handle /sb list [folder]
-      if (lower === "list" || lower.startsWith("list ")) {
-        const folderArg = lower.startsWith("list ") ? lower.slice(5) : "";
-        await handleList(folderArg, ctx);
-        return;
-      }
 
       // Handle refactor, status, query via subprocess
       let operation: "refactor" | "query" | "status";
