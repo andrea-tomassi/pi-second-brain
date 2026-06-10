@@ -22,7 +22,7 @@
     "pkm"
   ],
   "pi": {
-    "extensions": ["./dist/index.js"],
+    "extensions": ["./index.js"],
     "image": "https://raw.githubusercontent.com/andrea-tomassi/pi-second-brain/main/branding/banner.png"
   },
   "scripts": {
