@@ -135,11 +135,25 @@ export default function (pi: ExtensionAPI): void {
   // 3. Register /sb command
   pi.registerCommand("sb", {
     description: "Second Brain operations: refactor, list, status, or query your knowledge base",
-    getArgumentCompletions: async () => [
-      { value: "refactor", label: "refactor", description: "Refactor inbox entries into PARA categories" },
-      { value: "list", label: "list", description: "List folders with counts, or list contents of a specific folder" },
-      { value: "status", label: "status", description: "Report the current status of the knowledge base" },
-    ],
+    getArgumentCompletions: async (argumentPrefix: string) => {
+      const prefix = argumentPrefix.trimStart();
+
+      // /sb list <folder> — offer folder options
+      if (prefix === "list " || prefix === "list") {
+        return PARA_FOLDERS.map((f) => ({
+          value: `list ${f.key}`,
+          label: `${f.icon} ${f.key}`,
+          description: `${f.label} (${f.dir}/)`,
+        }));
+      }
+
+      // Top-level completions
+      return [
+        { value: "refactor", label: "refactor", description: "Refactor inbox entries into PARA categories" },
+        { value: "list", label: "list", description: "List folders with counts, or list contents of a specific folder" },
+        { value: "status", label: "status", description: "Report the current status of the knowledge base" },
+      ];
+    },
     handler: async (args, ctx) => {
       const trimmed = (args ?? "").trim();
       const lower = trimmed.toLowerCase();
