@@ -42,7 +42,23 @@ Process all inbox entries, categorize into PARA, and **auto-commit+push**.
 5. **Preserve original timestamps** — when moving an entry, include the `## YYYY-MM-DD HH:MM` heading exactly.
 6. **Update `index.md`** — add links to new or modified files.
 7. **Report** all moves, creations, and index changes.
-8. **Auto-commit and push**: `git add -A && git commit -m "second-brain: refactor inbox — <summary>" && git push`
+8. **Sync, commit and push** — use the safe sync algorithm below, then commit and push.
+
+### Safe Sync Algorithm
+
+Before committing, always sync with the remote to avoid conflicts in multi-machine setups:
+
+1. **Check for local changes**: `git status --porcelain`
+2. **Pull with rebase**: `git pull --rebase --autostash`
+   - `--autostash` saves any uncommitted work, pulls, re-applies it
+   - `--rebase` replays local commits on top of remote (linear history)
+3. **Resolve conflicts** (if any):
+   - If rebase fails: `git rebase --abort` and report the conflict to the user
+   - Never force-push or skip commits
+4. **Commit and push**: `git add -A && git commit -m "second-brain: refactor inbox — <summary>" && git push`
+5. **Report sync status**: show whether pull brought in new commits
+
+If `git pull --rebase --autostash` fails, **do not force anything** — report the error and let the user resolve it manually.
 
 ### When categorization is uncertain
 
@@ -75,6 +91,7 @@ MOVED: 00-Inbox/2026-06-05.md → 03-Resources/kubernetes-networking.md
 
 UPDATED: index.md — 3 links added
 
+✓ Pulled: 0 new commits from origin (up to date)
 ✓ Committed: abc1234 — second-brain: refactor inbox — moved 2 entries, created 1 file, updated index
 ✓ Pushed to origin
 ```
