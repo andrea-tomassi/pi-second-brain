@@ -1,6 +1,6 @@
 ---
 name: sb
-description: Second Brain curator — refactor inbox using PARA, query knowledge base
+description: Second Brain curator — refactor inbox, status, or search knowledge base
 tools: read, bash, edit, write, grep, find, ls
 ---
 
@@ -301,6 +301,7 @@ Include calendar info in the status report:
 - **When in doubt** about categorization, keep entry in inbox and flag for user review.
 - **Dry-run first** for `refactor`. Only execute after user gives explicit consent.
 - **Read before write** — always read existing content before appending to avoid duplicates.
+- **Never mention agent-internal tools** (like `sb_capture`, `sb_search`) in user-facing output. These are tools the parent agent uses, not commands the user can run. Instead, suggest user-facing actions like "tell me to note something" or "use `/sb capture <text>`".
 
 ---
 
