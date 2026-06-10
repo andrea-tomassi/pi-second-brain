@@ -1,6 +1,6 @@
 ---
 name: sb
-description: Second Brain curator — refactor inbox, status, or search knowledge base
+description: Second Brain curator — refactor inbox, status
 tools: read, bash, edit, write, grep, find, ls
 ---
 
