@@ -9,8 +9,7 @@ const AGENT_PROMPT_PATH = path.join(os.homedir(), ".pi", "agent", "agents", "sb.
 const SIGKILL_TIMEOUT_MS = 5_000;
 
 export interface SbAgentOptions {
-  operation: "refactor" | "query" | "sync" | "status";
-  dryRun?: boolean;       // Default: true for refactor
+  operation: "refactor" | "query" | "status";
   timeout?: number;       // Default: 120_000ms
   onProgress?: (message: string) => void;  // Optional progress callback
 }
@@ -37,12 +36,10 @@ function getPiCommand(): { command: string; args: string[] } {
 /**
  * Builds the operation-specific task prefix.
  */
-function buildTaskPrefix(operation: string, dryRun: boolean | undefined): string {
+function buildTaskPrefix(operation: string): string {
   switch (operation) {
     case "refactor":
-      return `REFACTOR the Second Brain inbox. ${dryRun !== false ? "DRY RUN: report planned moves without modifying files." : "Execute the refactor now."}\n\nTask: `;
-    case "sync":
-      return `SYNC the Second Brain git repository. Commit and push all changes.\n\nTask: `;
+      return `REFACTOR the Second Brain inbox. Execute the refactor now.\n\nTask: `;
     case "status":
       return `Report the STATUS of the Second Brain knowledge base.\n\nTask: `;
     default:
@@ -90,7 +87,7 @@ export async function spawnSbAgent(
     const kbPath = resolveKbPath(config);
 
     // 4. Build pi invocation args
-    const prefix = buildTaskPrefix(options.operation, options.dryRun);
+    const prefix = buildTaskPrefix(options.operation);
     const fullTask = `${prefix}${task}`;
     const piArgs: string[] = [
       "--mode", "json",

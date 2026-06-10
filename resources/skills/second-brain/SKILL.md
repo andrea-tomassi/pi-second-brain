@@ -1,6 +1,6 @@
 ---
 name: second-brain
-description: Personal knowledge management using the PARA method. Capture fleeting thoughts, search your knowledge base, refactor inbox items, and sync via git.
+description: Personal knowledge management using the PARA method. Capture fleeting thoughts, search your knowledge base, refactor inbox items (auto-commits).
 ---
 
 # Second Brain Skill
@@ -56,8 +56,9 @@ Search the knowledge base when:
 
 | Command | When to use |
 |---------|------------|
-| `/sb refactor` | User wants to organize inbox into PARA structure (moves items from inbox to Projects/Areas/Resources/Archive) |
-| `/sb sync` | User wants to commit and push changes via git |
+| `/sb refactor` | User wants to organize inbox into PARA structure (moves items from inbox to Projects/Areas/Resources/Archive, auto-commits and pushes) |
+| `/sb list` | User wants to see folder counts, or list contents of a specific PARA folder |
+| `/sb list <folder>` | User wants to see all entries in a specific folder (inbox, projects, areas, resources, archive) |
 | `/sb status` | User wants inbox count, project list, last sync time |
 | `/sb <query>` | Complex question requiring synthesis across multiple KB files — searches titles and content |
 

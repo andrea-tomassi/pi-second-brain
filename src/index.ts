@@ -1,17 +1,18 @@
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { copyFileSync, mkdirSync, existsSync } from "node:fs";
+import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
+import { copyFileSync, mkdirSync, existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { sbCaptureTool } from "./tools/sb-capture.js";
 import { sbSearchTool } from "./tools/sb-search.js";
 import { sbCalendarTool } from "./tools/sb-calendar.js";
 import { spawnSbAgent } from "./agent-runner.js";
+import { loadConfig, resolveKbPath } from "./config.js";
 
 /**
  * Pi Second Brain — Personal knowledge management for the Pi coding agent.
  *
  * This extension captures fleeting thoughts, searches a knowledge base,
- * refactors inbox items using the PARA method, and syncs via git.
+ * refactors inbox items using the PARA method, and auto-commits.
  *
  * @param pi - Pi Extension API
  */
@@ -21,47 +22,158 @@ export default function (pi: ExtensionAPI): void {
   pi.registerTool(sbSearchTool);
   pi.registerTool(sbCalendarTool);
 
-  // 2. Register /sb command
+  // 2. PARA folder definitions for list
+  const PARA_FOLDERS: ReadonlyArray<{ key: string; dir: string; icon: string; label: string }> = [
+    { key: "inbox", dir: "00-Inbox", icon: "📥", label: "Inbox" },
+    { key: "projects", dir: "01-Projects", icon: "📁", label: "Projects" },
+    { key: "areas", dir: "02-Areas", icon: "📂", label: "Areas" },
+    { key: "resources", dir: "03-Resources", icon: "📚", label: "Resources" },
+    { key: "archive", dir: "99-Archive", icon: "🗂️", label: "Archive" },
+  ];
+
+  /**
+   * Counts entries (## headings) in a markdown file.
+   */
+  function countEntries(filePath: string): number {
+    try {
+      const content = readFileSync(filePath, "utf-8");
+      const matches = content.match(/^## \d{4}-\d{2}-\d{2}/gm);
+      return matches ? matches.length : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * Extracts entry headings from a markdown file.
+   */
+  function getEntryHeadings(filePath: string): string[] {
+    try {
+      const content = readFileSync(filePath, "utf-8");
+      const lines = content.split("\n");
+      const headings: string[] = [];
+      for (const line of lines) {
+        if (/^## \d{4}-\d{2}-\d{2}/.test(line)) {
+          headings.push(line);
+        }
+      }
+      return headings;
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Handles the /sb list command — lists folders with counts, or a specific folder's contents.
+   */
+  async function handleList(args: string, ctx: ExtensionCommandContext): Promise<void> {
+    const config = await loadConfig();
+    const kbRoot = resolveKbPath(config);
+    const folderArg = args.trim().toLowerCase();
+
+    // If a specific folder is requested, show its contents
+    if (folderArg) {
+      const folder = PARA_FOLDERS.find(
+        (f) => f.key === folderArg || f.dir.toLowerCase() === folderArg,
+      );
+      if (!folder) {
+        ctx.ui.notify(
+          `Unknown folder "${folderArg}". Use: ${PARA_FOLDERS.map((f) => f.key).join(", ")}`,
+          "error",
+        );
+        return;
+      }
+
+      const folderPath = join(kbRoot, folder.dir);
+      let files: string[];
+      try {
+        files = readdirSync(folderPath)
+          .filter((f) => f.endsWith(".md"))
+          .sort();
+      } catch {
+        ctx.ui.notify(`${folder.icon} ${folder.label}: directory not found or empty.`, "error");
+        return;
+      }
+
+      if (files.length === 0) {
+        ctx.ui.notify(`${folder.icon} ${folder.label} (${folder.dir}): empty`, "info");
+        return;
+      }
+
+      const lines: string[] = [`${folder.icon} ${folder.label} (${folder.dir}): ${files.length} file(s)\n`];
+      for (const file of files) {
+        const filePath = join(folderPath, file);
+        const headings = getEntryHeadings(filePath);
+        lines.push(`  ${file}`);
+        for (const h of headings) {
+          // Show the heading text (strip ## prefix)
+          lines.push(`    ${h.replace(/^## /, "")}`);
+        }
+      }
+      ctx.ui.notify(lines.join("\n"), "info");
+      return;
+    }
+
+    // No folder specified — show summary with counts
+    const summaryLines: string[] = [];
+    for (const folder of PARA_FOLDERS) {
+      const folderPath = join(kbRoot, folder.dir);
+      let count = 0;
+      try {
+        const files = readdirSync(folderPath).filter((f) => f.endsWith(".md"));
+        for (const file of files) {
+          count += countEntries(join(folderPath, file));
+        }
+      } catch {
+        // Directory doesn't exist
+      }
+      summaryLines.push(`${folder.icon} ${folder.label}: ${count} entries (${folder.dir}/)`);
+    }
+    ctx.ui.notify(summaryLines.join("\n"), "info");
+  }
+
+  // 3. Register /sb command
   pi.registerCommand("sb", {
-    description: "Second Brain operations: refactor, sync, status, or query your knowledge base",
+    description: "Second Brain operations: refactor, list, status, or query your knowledge base",
     getArgumentCompletions: async () => [
       { value: "refactor", label: "refactor", description: "Refactor inbox entries into PARA categories" },
-      { value: "sync", label: "sync", description: "Commit and push changes to the Second Brain repository" },
+      { value: "list", label: "list", description: "List folders with counts, or list contents of a specific folder" },
       { value: "status", label: "status", description: "Report the current status of the knowledge base" },
     ],
     handler: async (args, ctx) => {
-      // Parse args
       const trimmed = (args ?? "").trim();
       const lower = trimmed.toLowerCase();
 
-      let operation: "refactor" | "query" | "sync" | "status";
+      // Handle /sb list [folder]
+      if (lower === "list" || lower.startsWith("list ")) {
+        const folderArg = lower.startsWith("list ") ? lower.slice(5) : "";
+        await handleList(folderArg, ctx);
+        return;
+      }
+
+      // Handle refactor, status, query via subprocess
+      let operation: "refactor" | "query" | "status";
       let task: string;
-      let dryRun: boolean | undefined;
 
       if (lower === "" || lower === "refactor") {
         operation = "refactor";
         task = "Refactor all inbox entries into the appropriate PARA categories.";
-        dryRun = false;
       } else if (lower.startsWith("refactor ")) {
         operation = "refactor";
-        task = lower.slice("refactor ".length);
-        dryRun = lower.includes("--dry-run");
-      } else if (lower === "sync") {
-        operation = "sync";
-        task = "Commit and push all changes in the Second Brain repository.";
+        task = trimmed.slice("refactor ".length);
       } else if (lower === "status") {
         operation = "status";
         task = "Report the current status of the Second Brain knowledge base.";
       } else {
         operation = "query";
-        task = trimmed; // Raw query
+        task = trimmed;
       }
 
       // Notify user that operation started
       ctx.ui.notify(`⏳ Second Brain: ${operation}...`, "info");
 
       try {
-        const result = await spawnSbAgent(task, { operation, dryRun }, undefined);
+        const result = await spawnSbAgent(task, { operation }, undefined);
 
         if (result.success) {
           const summary = result.output || "done";
