@@ -24,7 +24,7 @@ export const sbSearchTool = {
   name: "sb_search",
   label: "Search knowledge base",
   description:
-    "Search your Second Brain knowledge base for notes, tasks, or ideas matching a query. Returns matching file paths and line excerpts. Use this when the user asks about personal projects, tasks, or past captures. IMPORTANT: This tool only searches local notes — it does NOT check Google Calendar. For schedule, events, or appointments, use the /sb command instead.",
+    "Search your Second Brain knowledge base for notes, tasks, or ideas matching a query. Returns matching file paths and line excerpts. Use this when the user asks about personal projects, tasks, or past captures. IMPORTANT: This tool only searches local notes — it does NOT check Google Calendar. For schedule, events, or appointments, use the /sb command instead. The KB root is {kbPath} — default: ~/.second-brain/, configurable via ~/.pi/agent/pi-second-brain.json. PARA subdirectories: 00-Inbox, 01-Projects, 02-Areas, 03-Resources, 99-Archive.",
   parameters: Type.Object({
     query: Type.String({ description: "Search query — specific terms work best." }),
     directory: Type.Optional(

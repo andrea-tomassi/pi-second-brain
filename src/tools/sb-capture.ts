@@ -17,7 +17,7 @@ function timestamp(): string {
 export const sbCaptureTool = {
   name: "sb_capture",
   label: "Capture to inbox",
-  description: "Capture a fleeting thought, task, idea, or note into your Second Brain inbox. Use when the user mentions something worth remembering — a to-do, an idea, a reminder, a discovery. The note is appended to today's inbox file and will be categorized during the next refactor.",
+  description: "Capture a fleeting thought, task, idea, or note into your Second Brain inbox. Use when the user mentions something worth remembering — a to-do, an idea, a reminder, a discovery. The note is appended to today's inbox file and will be categorized during the next refactor. Files are saved to {kbPath}/00-Inbox/{YYYY-MM-DD}.md — default kbPath is ~/.second-brain/, configurable via ~/.pi/agent/pi-second-brain.json.",
   parameters: Type.Object({
     content: Type.String({ description: "The text to capture. Brief and clear." }),
   }),

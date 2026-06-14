@@ -111,6 +111,15 @@ The PARA directories (`01-Projects/`, `02-Areas/`, `03-Resources/`, `99-Archive/
 
 ## KB Location
 
-Default: `~/.second-brain/` — configurable via `~/.pi/agent/pi-second-brain.json`.
+**Default:** `~/.second-brain/` — configurable via `~/.pi/agent/pi-second-brain.json`.
 
-The tools (`sb_capture`, `sb_search`) use this path automatically. No manual path configuration is needed.
+```
+~/.second-brain/
+├── 00-Inbox/        ← sb_capture writes here ({YYYY-MM-DD}.md)
+├── 01-Projects/
+├── 02-Areas/
+├── 03-Resources/
+└── 99-Archive/
+```
+
+The tools (`sb_capture`, `sb_search`) resolve this path automatically. When reading captured files directly, use the resolved path from config (default: `~/.second-brain/00-Inbox/`).
