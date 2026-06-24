@@ -1,6 +1,7 @@
 ---
 name: sb
 description: Second Brain curator — refactor inbox, status
+mode: subagent
 tools: read, bash, edit, write, grep, find, ls
 ---
 
