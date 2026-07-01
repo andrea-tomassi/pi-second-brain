@@ -41,12 +41,12 @@ Rationalize the **entire knowledge base**: absorb new inbox entries and re-synth
 | `03-Resources/` | **Reference material**, topics of interest, book notes, tutorials, links (e.g., "kubernetes networking", "vegan recipes") |
 | `99-Archive/` | **Completed** projects, **stale** items > 12 months old with no updates, or items you are explicitly done with |
 
-4. **Synthesize each PARA file** — for every file that has new content to absorb (or overlaps with new content), rewrite it as an organic, topic-organized note:
+4. **Rationalize every PARA file** that is still in chronological/dated format (entries under `## YYYY-MM-DD` headings). Do NOT skip a file just because it has no new inbox content — if it still uses dated headings, it must be converted to organic format. For each such file, rewrite it as a topic-organized note:
    - **Merge** entries about the same topic into coherent sections under descriptive `##` headings (e.g., `## Shell Aliases`, `## Open Issues`, `## Next Steps`).
    - **Deduplicate** — when multiple entries convey the same information, keep the most complete/latest version and drop the rest.
    - **Collapse evolution** — if entries show a progression (added X, then changed X, then removed X), write only the **final current state**, not the history.
    - **Preserve information, not timestamps.** A date may appear inline only when it is itself meaningful (a deadline, a "last updated" note). Never use `## YYYY-MM-DD` headings in PARA files.
-   - If a PARA file has no new related content and no dedup opportunity, **leave it untouched**.
+   - If a file is **already** in organic topic-organized format (no dated headings), only merge in any new related inbox content; otherwise leave it untouched.
 5. **Create new files** when an inbox entry introduces a topic with no existing home. Follow the naming and format conventions below.
 6. **Clear processed inbox** — once inbox content has been absorbed into PARA files, remove those entries from the inbox files. Empty inbox daily files may be deleted. (Git history retains the raw captures.)
 7. **Update `index.md`** — add/update links for any created or renamed files; remove links to deleted files.
