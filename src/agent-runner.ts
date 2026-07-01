@@ -8,9 +8,19 @@ import { loadConfig, resolveKbPath } from "./config.js";
 const AGENT_PROMPT_PATH = path.join(os.homedir(), ".pi", "agent", "agents", "sb.md");
 const SIGKILL_TIMEOUT_MS = 5_000;
 
+/**
+ * Per-operation timeout defaults (ms). Refactor reads the entire KB and
+ * synthesizes, so it needs the longest window.
+ */
+const DEFAULT_TIMEOUTS: Record<SbAgentOptions["operation"], number> = {
+  refactor: 600_000, // 10 min — full KB rationalization + git sync
+  query: 180_000,    // 3 min
+  status: 120_000,   // 2 min
+};
+
 export interface SbAgentOptions {
   operation: "refactor" | "query" | "status";
-  timeout?: number;       // Default: 120_000ms
+  timeout?: number;       // Default: per-operation (see DEFAULT_TIMEOUTS)
   onProgress?: (message: string) => void;  // Optional progress callback
 }
 
@@ -61,7 +71,7 @@ export async function spawnSbAgent(
   options: SbAgentOptions,
   signal?: AbortSignal,
 ): Promise<SbAgentResult> {
-  const timeout = options.timeout ?? 120_000;
+  const timeout = options.timeout ?? DEFAULT_TIMEOUTS[options.operation] ?? 120_000;
   let tmpPromptPath: string | null = null;
 
   try {
