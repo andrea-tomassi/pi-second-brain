@@ -1,5 +1,5 @@
 import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
-import { copyFileSync, mkdirSync, existsSync, readdirSync, readFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { sbCaptureTool } from "./tools/sb-capture.js";
@@ -37,7 +37,7 @@ export default function (pi: ExtensionAPI): void {
   function countEntries(filePath: string): number {
     try {
       const content = readFileSync(filePath, "utf-8");
-      const matches = content.match(/^## \d{4}-\d{2}-\d{2}/gm);
+      const matches = content.match(/^## /gm);
       return matches ? matches.length : 0;
     } catch {
       return 0;
@@ -53,7 +53,7 @@ export default function (pi: ExtensionAPI): void {
       const lines = content.split("\n");
       const headings: string[] = [];
       for (const line of lines) {
-        if (/^## \d{4}-\d{2}-\d{2}/.test(line)) {
+        if (/^## /.test(line)) {
           headings.push(line);
         }
       }
@@ -216,10 +216,9 @@ export default function (pi: ExtensionAPI): void {
     },
   });
 
-  // 3. Bootstrap agent file on session_start
+  // 3. Bootstrap agent file on session_start (update if source is newer)
   pi.on("session_start", () => {
     try {
-      // Copy sb.md to ~/.pi/agent/agents/ if not present
       const here = dirname(fileURLToPath(import.meta.url));
       // In dist/ → resources is at ../../resources/
       const srcAgentPath = join(here, "..", "resources", "agents", "sb.md");
@@ -231,9 +230,19 @@ export default function (pi: ExtensionAPI): void {
       );
       const dstAgentPath = join(agentsDir, "sb.md");
 
-      if (!existsSync(dstAgentPath) && existsSync(srcAgentPath)) {
+      if (existsSync(srcAgentPath)) {
         mkdirSync(agentsDir, { recursive: true });
-        copyFileSync(srcAgentPath, dstAgentPath);
+        // Copy when dst is missing or source is newer (propagates prompt updates)
+        const srcMtime = statSync(srcAgentPath).mtimeMs;
+        let needsCopy = true;
+        try {
+          needsCopy = srcMtime > statSync(dstAgentPath).mtimeMs;
+        } catch {
+          // dst doesn't exist — copy
+        }
+        if (needsCopy) {
+          copyFileSync(srcAgentPath, dstAgentPath);
+        }
       }
     } catch {
       // Best-effort — don't crash startup

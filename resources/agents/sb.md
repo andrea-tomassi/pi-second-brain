@@ -23,14 +23,16 @@ You run via `pi --mode json`. Available tools: `read`, `bash`, `edit`, `write`, 
 
 ---
 
-## 1. REFACTOR — Inbox Processing
+## 1. REFACTOR — Knowledge Base Rationalization
 
-Process all inbox entries, categorize into PARA, and **auto-commit+push**.
+Rationalize the **entire knowledge base**: absorb new inbox entries and re-synthesize all PARA files into organic, topic-organized notes. Then **auto-commit+push**.
+
+> **Core principle:** PARA files are living reference notes organized **by topic** — not chronological logs. Merge related entries, deduplicate, and write coherent sections. Dates are NOT the organizing principle.
 
 ### Steps
-1. **Read all files** in `00-Inbox/` using `ls` + `read`.
-2. **Parse entries**: each entry starts with `## YYYY-MM-DD HH:MM` followed by `- content` bullet lines.
-3. **Categorize** each entry using these rules:
+1. **Read the entire KB** — every `.md` file across all folders (`00-Inbox/`, `01-Projects/`, `02-Areas/`, `03-Resources/`, `99-Archive/`) plus `index.md`. Use `ls` then `read` on each folder. This full read is required to detect duplicates and connections across files.
+2. **Build a unified mental model** — what topics exist, where information overlaps, what is new since the last refactor.
+3. **Assign PARA categories** using these rules:
 
 | PARA Folder | When it belongs there |
 |---|---|
@@ -39,11 +41,17 @@ Process all inbox entries, categorize into PARA, and **auto-commit+push**.
 | `03-Resources/` | **Reference material**, topics of interest, book notes, tutorials, links (e.g., "kubernetes networking", "vegan recipes") |
 | `99-Archive/` | **Completed** projects, **stale** items > 12 months old with no updates, or items you are explicitly done with |
 
-4. **Move content** (not copy) from inbox files to the appropriate target file. If target file doesn't exist, create it.
-5. **Preserve original timestamps** — when moving an entry, include the `## YYYY-MM-DD HH:MM` heading exactly.
-6. **Update `index.md`** — add links to new or modified files.
-7. **Report** all moves, creations, and index changes.
-8. **Sync, commit and push** — use the safe sync algorithm below, then commit and push.
+4. **Synthesize each PARA file** — for every file that has new content to absorb (or overlaps with new content), rewrite it as an organic, topic-organized note:
+   - **Merge** entries about the same topic into coherent sections under descriptive `##` headings (e.g., `## Shell Aliases`, `## Open Issues`, `## Next Steps`).
+   - **Deduplicate** — when multiple entries convey the same information, keep the most complete/latest version and drop the rest.
+   - **Collapse evolution** — if entries show a progression (added X, then changed X, then removed X), write only the **final current state**, not the history.
+   - **Preserve information, not timestamps.** A date may appear inline only when it is itself meaningful (a deadline, a "last updated" note). Never use `## YYYY-MM-DD` headings in PARA files.
+   - If a PARA file has no new related content and no dedup opportunity, **leave it untouched**.
+5. **Create new files** when an inbox entry introduces a topic with no existing home. Follow the naming and format conventions below.
+6. **Clear processed inbox** — once inbox content has been absorbed into PARA files, remove those entries from the inbox files. Empty inbox daily files may be deleted. (Git history retains the raw captures.)
+7. **Update `index.md`** — add/update links for any created or renamed files; remove links to deleted files.
+8. **Report** all synthesis, creations, deletions, and index changes.
+9. **Sync, commit and push** — use the safe sync algorithm below, then commit and push.
 
 ### Safe Sync Algorithm
 
@@ -56,7 +64,7 @@ Before committing, always sync with the remote to avoid conflicts in multi-machi
 3. **Resolve conflicts** (if any):
    - If rebase fails: `git rebase --abort` and report the conflict to the user
    - Never force-push or skip commits
-4. **Commit and push**: `git add -A && git commit -m "second-brain: refactor inbox — <summary>" && git push`
+4. **Commit and push**: `git add -A && git commit -m "second-brain: rationalize KB — <summary>" && git push`
 5. **Report sync status**: show whether pull brought in new commits
 
 If `git pull --rebase --autostash` fails, **do not force anything** — report the error and let the user resolve it manually.
@@ -79,21 +87,23 @@ Wait for the user's choice, then proceed.
 
 ### Output format
 ```
-📋 Refactor Complete
-────────────────────
-MOVED: 00-Inbox/2026-06-07.md → 01-Projects/build-portfolio-site.md
-       ## 2026-06-07 14:30 — "Start portfolio redesign"
+📋 Rationalization Complete
+──────────────────────────
+SYNTHESIZED: 03-Resources/linux-preferences.md
+  merged 5 inbox entries into topic sections (Shell Aliases, Open Questions)
 
-CREATED: 02-Areas/career.md
-  (new file, 1 entry)
+CREATED: 01-Projects/sogei-poc.md
+  (new file from 2 inbox entries)
 
-MOVED: 00-Inbox/2026-06-05.md → 03-Resources/kubernetes-networking.md
-       ## 2026-06-05 09:15 — "Read K8s networking article"
+SYNTHESIZED: 01-Projects/homelab-ai-inference.md
+  merged 3 inbox entries; collapsed setup history into final state
 
-UPDATED: index.md — 3 links added
+CLEARED: 00-Inbox/2026-07-01.md (7 entries absorbed)
+
+UPDATED: index.md — 2 links added
 
 ✓ Pulled: 0 new commits from origin (up to date)
-✓ Committed: abc1234 — second-brain: refactor inbox — moved 2 entries, created 1 file, updated index
+✓ Committed: abc1234 — second-brain: rationalize KB — synthesized 3 files, created 1, cleared inbox
 ✓ Pushed to origin
 ```
 
@@ -163,7 +173,7 @@ Last commit: 2026-06-07 18:30:45 +0200
 
 ## File Format Conventions
 
-### Entry format (inside any `.md` file)
+### Inbox format (`00-Inbox/*.md`) — raw chronological log
 ```markdown
 ## 2026-06-07 14:30
 - Short content line
@@ -173,6 +183,21 @@ Last commit: 2026-06-07 18:30:45 +0200
 ## 2026-06-05 09:15
 - Another entry with timestamp
 ```
+The inbox is a **staging area**. Entries keep their capture timestamp. Refactor absorbs and clears them.
+
+### PARA file format — organic, topic-organized notes
+```markdown
+# Linux Preferences
+
+## Shell Aliases
+- `ll` = `LC_COLLATE=C ls -Fagho --color=auto --group-directories-first` — hidden files first, dirs grouped
+- `cc` = `clear`
+- `pp` = `pi` — opens pi in cwd (context-aware)
+
+## Open Questions
+- Default working directory for pp?
+```
+PARA files are organized **by topic**, not by date. Use descriptive `##` section headings. Merge and deduplicate so each file reads as a coherent reference, not a changelog.
 
 ### Map of Content (`index.md`)
 ```markdown
@@ -193,8 +218,8 @@ Last commit: 2026-06-07 18:30:45 +0200
 
 ### Naming convention
 - Filenames: lowercase kebab-case (`my-project.md`)
-- Headings: ATX `##` for entries, `#` for title
-- Content: bullet lines (`- text`)
+- Headings: `#` for file title; `##` for topic sections (descriptive, not dates); inbox keeps `## YYYY-MM-DD HH:MM` capture headings
+- Content: bullet lines (`- text`) or short prose
 
 ---
 

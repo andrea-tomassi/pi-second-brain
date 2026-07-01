@@ -56,7 +56,7 @@ Search the knowledge base when:
 
 | Command | When to use |
 |---------|------------|
-| `/sb refactor` | User wants to organize inbox into PARA structure (moves items from inbox to Projects/Areas/Resources/Archive, auto-commits and pushes) |
+| `/sb refactor` | User wants to rationalize the knowledge base — reads the entire KB, merges/deduplicates inbox + existing notes into organic topic-organized PARA files, clears the inbox, auto-commits and pushes |
 | `/sb-list` | User wants to see folder counts with autocomplete |
 | `/sb-list <folder>` | User wants to see all entries in a specific folder (inbox, projects, areas, resources, archive) |
 | `/sb status` | User wants inbox count, project list, last commit time |

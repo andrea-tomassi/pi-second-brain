@@ -40,7 +40,7 @@ Ask about your notes:
 ### Manage (`/sb` command)
 
 ```
-/sb refactor     # Organize inbox into PARA categories (dry-run first)
+/sb refactor     # Rationalize the entire KB into organic PARA notes (reads everything, merges, dedupes)
 /sb sync         # Git commit + push
 /sb status       # Inbox count, active projects, last sync
 /sb <query>      # Complex question (e.g., "/sb summarize my home renovation project")
@@ -50,7 +50,7 @@ Ask about your notes:
 
 - **📥 Capture** — Save quick notes, ideas, and TODOs to your inbox (atomic append, zero LLM cost)
 - **🔍 Search** — Ripgrep-powered full-text search across your entire KB
-- **📐 PARA refactoring** — Subagent organizes inbox into **P**rojects, **A**reas, **R**esources, and **A**rchives
+- **📐 PARA rationalization** — Subagent reads the entire KB and synthesizes inbox + existing notes into organic, topic-organized **P**rojects, **A**reas, **R**esources, and **A**rchives (merges, deduplicates, clears inbox)
 - **🔄 Git sync** — Commit and push changes to keep your second brain in sync
 - **📅 Google Calendar** — Read events, check availability, create events from inbox entries (optional)
 
