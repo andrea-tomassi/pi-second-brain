@@ -18,6 +18,16 @@ const DEFAULT_TIMEOUTS: Record<SbAgentOptions["operation"], number> = {
   status: 120_000,   // 2 min
 };
 
+/**
+ * Per-operation thinking level defaults. Refactor/query need moderate
+ * reasoning; status is trivial. Avoids inherited xhigh slowness.
+ */
+const DEFAULT_THINKING: Record<SbAgentOptions["operation"], string> = {
+  refactor: "medium",
+  query: "medium",
+  status: "low",
+};
+
 export interface SbAgentOptions {
   operation: "refactor" | "query" | "status";
   timeout?: number;       // Default: per-operation (see DEFAULT_TIMEOUTS)
@@ -49,7 +59,7 @@ function getPiCommand(): { command: string; args: string[] } {
 function buildTaskPrefix(operation: string): string {
   switch (operation) {
     case "refactor":
-      return `REFACTOR the Second Brain inbox. Execute the refactor now.\n\nTask: `;
+      return `REFACTOR the entire Second Brain knowledge base. Read EVERY file, synthesize into organic topic-organized notes, merge, deduplicate, clear inbox, git sync. Execute the refactor now.\n\nTask: `;
     case "status":
       return `Report the STATUS of the Second Brain knowledge base.\n\nTask: `;
     default:
@@ -99,10 +109,12 @@ export async function spawnSbAgent(
     // 4. Build pi invocation args
     const prefix = buildTaskPrefix(options.operation);
     const fullTask = `${prefix}${task}`;
+    const thinkingLevel = DEFAULT_THINKING[options.operation] ?? "medium";
     const piArgs: string[] = [
       "--mode", "json",
       "-p",
       "--no-session",
+      "--thinking", thinkingLevel,
       "--append-system-prompt", tmpPromptPath,
       fullTask,
     ];
