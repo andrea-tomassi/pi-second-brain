@@ -250,9 +250,7 @@ Every PARA file begins with a **semantic frontmatter** block. This is read as un
 ---
 Topics: Shell aliases (ll=ls config, cc=clear, pp=pi), nnn terminal file manager
 Updated: 2026-07-02
-Related:
-  - homelab-ai-inference.md — pp alias used to SSH into inference hosts
-  - ai-strategic-insights.md — CLI-first philosophy behind alias design
+Related: —
 ---
 
 # Linux Preferences
@@ -270,7 +268,7 @@ Related:
 |-------|---------|
 | **Topics** | One line describing what's actually in the file (specific, not generic). THE key field for relevance matching. |
 | **Updated** | Date of last rationalization (YYYY-MM-DD). Lets the subprocess skip recently-processed files. |
-| **Related** | **Knowledge graph edges** — one entry per line: `filename.md — semantic reason`. The reason explains *why a reader of this file would benefit from reading the other* (the knowledge connection), NEVER editing history (no "extracted from", "moved from"). Omit if none. |
+| **Related** | **Knowledge graph edges** — one entry per line: `filename.md — semantic reason`. The reason explains *why a reader of this file would benefit from reading the other* (the knowledge connection), NEVER editing history (no "extracted from", "moved from"). Only populate when genuine connections exist — use `—` if none. Never force links. |
 
 PARA files are organized **by topic**, not by date. Use descriptive `##` section headings. Merge and deduplicate so each file reads as a coherent reference, not a changelog.
 
