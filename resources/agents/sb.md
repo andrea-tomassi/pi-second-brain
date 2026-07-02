@@ -30,7 +30,17 @@ Rationalize the **entire knowledge base**: absorb new inbox entries and re-synth
 > **Core principle:** PARA files are living reference notes organized **by topic** — not chronological logs. Merge related entries, deduplicate, and write coherent sections. Dates are NOT the organizing principle.
 
 ### Steps
-1. **Read the entire KB** — every `.md` file across all folders (`00-Inbox/`, `01-Projects/`, `02-Areas/`, `03-Resources/`, `99-Archive/`) plus `index.md`. Use `ls` then `read` on each folder. This full read is required to detect duplicates and connections across files.
+1. **Read the KB using a 2-pass approach:**
+   - **Pass 1 (scan frontmatter — cheap):** List every file with its frontmatter only (Topics/Updated/Related), without reading the body:
+     ```bash
+     find ~/.second-brain -name '*.md' ! -path '*/.git/*' -exec awk 'FNR==1{fm=0} /^---$/{fm++;next} fm==1{print FILENAME": "$0}' {} +
+     ```
+     Also find files still in dated format (these MUST be rationalized regardless of inbox):
+     ```bash
+     grep -rl '^## [0-9]\{4\}-' ~/.second-brain --include='*.md'
+     ```
+     Use the Topics/Updated fields to identify which files relate to the new inbox content.
+   - **Pass 2 (read body — selective):** `read` the full body of: all inbox files (`00-Inbox/`), all files still in dated format, files whose Topics relate to the inbox, and `index.md`. For a small KB this effectively reads everything; for a large KB it reads only what's relevant.
 2. **Build a unified mental model** — what topics exist, where information overlaps, what is new since the last refactor.
 3. **Assign PARA categories** using these rules:
 
