@@ -268,7 +268,7 @@ Related: —
 |-------|---------|
 | **Topics** | One line describing what's actually in the file (specific, not generic). THE key field for relevance matching. |
 | **Updated** | Date of last rationalization (YYYY-MM-DD). Lets the subprocess skip recently-processed files. |
-| **Related** | **Knowledge graph edges** — one entry per line: `filename.md — semantic reason`. The reason explains *why a reader of this file would benefit from reading the other* (the knowledge connection), NEVER editing history (no "extracted from", "moved from"). Only populate when genuine connections exist — use `—` if none. Never force links. |
+| **Related** | **Knowledge graph edges** — one entry per line: `filename.md — semantic reason`. The reason explains *why a reader of this file would benefit from reading the other* (the knowledge connection), NEVER editing history (no "extracted from", "moved from"). Only populate when genuine connections exist — use `—` if none. Never force links. **Three anti-patterns to avoid:** (1) **never infer** — the connection must be grounded in information explicitly present in both files, not assumed; (2) **never contrasts** — Related expresses shared knowledge, not differences ("uses X" not "explicitly NOT X"); (3) **never operational** — Related connects knowledge domains, not scheduling/logistic dependencies ("meeting must fit calendar" is not a knowledge edge). |
 
 PARA files are organized **by topic**, not by date. Use descriptive `##` section headings. Merge and deduplicate so each file reads as a coherent reference, not a changelog.
 
