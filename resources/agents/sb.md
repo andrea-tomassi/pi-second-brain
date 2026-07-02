@@ -56,13 +56,60 @@ Rationalize the **entire knowledge base**: absorb new inbox entries and re-synth
    - **Deduplicate** — when multiple entries convey the same information, keep the most complete/latest version and drop the rest.
    - **Collapse evolution** — if entries show a progression (added X, then changed X, then removed X), write only the **final current state**, not the history.
    - **Preserve information, not timestamps.** A date may appear inline only when it is itself meaningful (a deadline, a "last updated" note). Never use `## YYYY-MM-DD` headings in PARA files.
-   - **Maintain frontmatter** — update the `Topics` line to reflect the file's current content, set `Updated` to today's date, adjust `Related` cross-references. Write semantic descriptive values, not rigid tags (see File Format Conventions).
+   - **Maintain frontmatter** — update `Topics` to reflect current content, set `Updated` to today's date, and maintain `Related` edges with semantic reasons (see Atomicity & Knowledge Graph).
    - If a file is **already** in organic topic-organized format (no dated headings), only merge in any new related inbox content; otherwise leave it untouched.
 5. **Create new files** when an inbox entry introduces a topic with no existing home. Follow the naming and format conventions below, including semantic frontmatter (Topics/Updated/Related).
 6. **Clear processed inbox** — once inbox content has been absorbed into PARA files, remove those entries from the inbox files. Empty inbox daily files may be deleted. (Git history retains the raw captures.)
 7. **Update `index.md`** — add/update links for any created or renamed files; remove links to deleted files.
 8. **Report** all synthesis, creations, deletions, and index changes.
 9. **Sync, commit and push** — use the safe sync algorithm below, then commit and push.
+
+### Atomicity & Knowledge Graph
+
+The KB is a **graph of atomic knowledge nodes** connected by semantic edges in the `Related` frontmatter. Files are not just containers — they are reusable knowledge units.
+
+**Atomic file principle:** If a knowledge unit could be referenced from 3+ different contexts, it deserves its own file. Example: `eu-ai-act-compliance.md` is referenced from Leonardo deliverables, product decisions, and sales materials — so it stands alone, not buried inside a project file.
+
+**When to split a file:**
+- The file covers **3+ independently reusable topics** (if Topics lists unrelated domains, split)
+- A section could be **referenced from multiple other files** independently
+- The file has grown too large to serve as a focused reference
+
+**How to split:**
+1. Extract the reusable section into a new atomic file with its own frontmatter (Topics/Updated/Related)
+2. In both files, write `Related` entries with **semantic reasons** — never "extracted from" (that's audit history, not knowledge)
+3. Update `index.md` with the new file
+
+**Split example:**
+```
+Before: linux-preferences.md
+  Topics: Shell aliases, nnn config, SSH setup, terminal themes
+
+After:
+  shell-aliases.md
+    Related: linux-preferences.md — shares terminal/Linux workflow context
+  nnn-file-manager.md
+    Related: linux-preferences.md — shares terminal/Linux workflow context
+  linux-preferences.md
+    Related: shell-aliases.md, nnn-file-manager.md — shares terminal/Linux workflow context
+```
+
+**Graph operations during refactor:**
+- **Maintain edges:** when content moves between files, update `Related` in both files
+- **Generalize:** when the same knowledge appears in 2+ files, extract it into an atomic file and reference from all
+- **Connect inbox:** new entry → find files with relevant Topics → merge or create new atomic node + Related edges
+
+**Reverse lookup** (who references this file?):
+```bash
+grep -rl "shell-aliases.md" ~/.second-brain --include='*.md'
+```
+
+**Full edge map** (all relationships in the graph):
+```bash
+find ~/.second-brain -name '*.md' -exec awk '
+  FNR==1{fm=0} /^---$/{fm++;next} fm==1 && /^  - .+\.md/{print FILENAME" -> "$0}
+' {} +
+```
 
 ### Safe Sync Algorithm
 
@@ -203,7 +250,9 @@ Every PARA file begins with a **semantic frontmatter** block. This is read as un
 ---
 Topics: Shell aliases (ll=ls config, cc=clear, pp=pi), nnn terminal file manager
 Updated: 2026-07-02
-Related: ai-strategic-insights.md
+Related:
+  - homelab-ai-inference.md — pp alias used to SSH into inference hosts
+  - ai-strategic-insights.md — CLI-first philosophy behind alias design
 ---
 
 # Linux Preferences
@@ -221,7 +270,7 @@ Related: ai-strategic-insights.md
 |-------|---------|
 | **Topics** | One line describing what's actually in the file (specific, not generic). THE key field for relevance matching. |
 | **Updated** | Date of last rationalization (YYYY-MM-DD). Lets the subprocess skip recently-processed files. |
-| **Related** | Cross-references to other files (for dedup/merge). Use `—` if none. |
+| **Related** | **Knowledge graph edges** — one entry per line: `filename.md — semantic reason`. The reason explains *why a reader of this file would benefit from reading the other* (the knowledge connection), NEVER editing history (no "extracted from", "moved from"). Omit if none. |
 
 PARA files are organized **by topic**, not by date. Use descriptive `##` section headings. Merge and deduplicate so each file reads as a coherent reference, not a changelog.
 
