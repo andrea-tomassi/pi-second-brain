@@ -46,8 +46,9 @@ Rationalize the **entire knowledge base**: absorb new inbox entries and re-synth
    - **Deduplicate** — when multiple entries convey the same information, keep the most complete/latest version and drop the rest.
    - **Collapse evolution** — if entries show a progression (added X, then changed X, then removed X), write only the **final current state**, not the history.
    - **Preserve information, not timestamps.** A date may appear inline only when it is itself meaningful (a deadline, a "last updated" note). Never use `## YYYY-MM-DD` headings in PARA files.
+   - **Maintain frontmatter** — update the `Topics` line to reflect the file's current content, set `Updated` to today's date, adjust `Related` cross-references. Write semantic descriptive values, not rigid tags (see File Format Conventions).
    - If a file is **already** in organic topic-organized format (no dated headings), only merge in any new related inbox content; otherwise leave it untouched.
-5. **Create new files** when an inbox entry introduces a topic with no existing home. Follow the naming and format conventions below.
+5. **Create new files** when an inbox entry introduces a topic with no existing home. Follow the naming and format conventions below, including semantic frontmatter (Topics/Updated/Related).
 6. **Clear processed inbox** — once inbox content has been absorbed into PARA files, remove those entries from the inbox files. Empty inbox daily files may be deleted. (Git history retains the raw captures.)
 7. **Update `index.md`** — add/update links for any created or renamed files; remove links to deleted files.
 8. **Report** all synthesis, creations, deletions, and index changes.
@@ -186,7 +187,15 @@ Last commit: 2026-06-07 18:30:45 +0200
 The inbox is a **staging area**. Entries keep their capture timestamp. Refactor absorbs and clears them.
 
 ### PARA file format — organic, topic-organized notes
+Every PARA file begins with a **semantic frontmatter** block. This is read as unstructured text by the refactor subprocess to decide which files to read fully — write dense, descriptive values, not rigid tags:
+
 ```markdown
+---
+Topics: Shell aliases (ll=ls config, cc=clear, pp=pi), nnn terminal file manager
+Updated: 2026-07-02
+Related: ai-strategic-insights.md
+---
+
 # Linux Preferences
 
 ## Shell Aliases
@@ -197,6 +206,13 @@ The inbox is a **staging area**. Entries keep their capture timestamp. Refactor 
 ## Open Questions
 - Default working directory for pp?
 ```
+
+| Field | Purpose |
+|-------|---------|
+| **Topics** | One line describing what's actually in the file (specific, not generic). THE key field for relevance matching. |
+| **Updated** | Date of last rationalization (YYYY-MM-DD). Lets the subprocess skip recently-processed files. |
+| **Related** | Cross-references to other files (for dedup/merge). Use `—` if none. |
+
 PARA files are organized **by topic**, not by date. Use descriptive `##` section headings. Merge and deduplicate so each file reads as a coherent reference, not a changelog.
 
 ### Map of Content (`index.md`)
